@@ -25,9 +25,12 @@ def detect_language(text):
 
 
 def remove_useless_symbols(text):
+    """
+    Substitute all characters that are not letters, digits, whitespaces or allowed punctuation with a whitespace.
+    """
     allowed_punctuation = r'\.,;:\"!'
     pattern = f'[^{allowed_punctuation}\\w\\s]'
-    return re.sub(pattern, '', text).strip()
+    return re.sub(pattern, ' ', text)
 
 
 def extract_word_positions(text):
@@ -40,25 +43,27 @@ def extract_word_positions(text):
 
 
 def is_useless(word):
+    """
+    Check if the word is a punctuation mark or a whitespace.
+    """
     pattern = re.compile(r"[a-zA-Z]|\d")
     return not pattern.search(word)
 
 
 def preprocess_text(base_text):
     text = remove_useless_symbols(base_text)
+    
     lang = detect_language(text)
 
     nlp = spacy.load('es_core_news_md') if lang == 'es' else spacy.load('ca_core_news_md')
 
     doc = nlp(text)
-    # print(f'Text is :{text}')
     lemmas_per_sentence = [[token for token in sentence if not is_useless(token.text)] for sentence in doc.sents]
-    # print(f'Token per sentence are:{lemmas_per_sentence[:5]}')
 
     return lemmas_per_sentence
 
 
-def extract_features(sentence, i, words_with_indices):
+def extract_features(sentence, i):
     token = sentence[i]
     word = token.text
 
@@ -72,7 +77,7 @@ def extract_features(sentence, i, words_with_indices):
         'contains_digits': bool(re.search(r'\d', word)),
         'pos': token.pos_,
         'lemma': token.lemma_,
-        'start-end': {'start': words_with_indices[word]['start'], 'end': words_with_indices[word]['end']}
+        'start-end': {'start': token.idx, 'end': token.idx + len(word)}
     }
 
     features["prefix_2"] = word[:2]
@@ -89,6 +94,18 @@ def extract_features(sentence, i, words_with_indices):
     return features
 
 
+def clear_sentence(sentence):
+    """
+    Remove punctuation marks and whitespaces from the sentence.
+    """
+    return [token for token in sentence if not is_useless(token.text)]
+
+
+def clear_processed_text(processed_text):
+    """
+    Remove empty sentences from the processed text.
+    """
+    return [cleared_sentence for cleared_sentence in processed_text if cleared_sentence]
 
 def main():
     with open('train_data.json', 'r', encoding='utf-8') as train_file:
@@ -101,10 +118,23 @@ def main():
     # medical_texts_test, predictions_test = extract_medical_texts_and_predictions(test_dataset)
 
     sentences = preprocess_text(medical_texts_train[0])
-    print(extract_features(sentences[0], 1, extract_word_positions(medical_texts_train[0])))
+    
+    sentences = clear_processed_text(sentences)
+    
+    for sentence in sentences:
+        for token in sentence:
+            print("{:<20} {:<20} {:<20}".format(token.text, token.lemma_, token.idx))
+    
+    # print(extract_features(sentences[0], 0, extract_word_positions(medical_texts_train[0])))
+    # print(extract_features(sentences[0], 1, extract_word_positions(medical_texts_train[0])))
+    # print(extract_features(sentences[0], 9, extract_word_positions(medical_texts_train[0])))
     # print(extract_word_positions(medical_texts_train[0])[:5])
     
-    print(sentences[:5])
+    # print(extract_word_positions(medical_texts_train[0]))
+    
+    # for i in range(len(sentences[0])):
+        # print(i)
+        # print(extract_features(sentences[0], i, extract_word_positions(medical_gittexts_train[0])))
 
 
 if __name__ == '__main__':
