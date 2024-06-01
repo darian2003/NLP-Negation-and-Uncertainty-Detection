@@ -44,5 +44,6 @@ The Machine Learning model is implemented in the CRF_model.ipynb file. As mentio
 
 ## PART 3
 
+The Deep Learning model in implemented in the Deep_Learning_approach.ipynb file. This approach contains a neural network architecture based on CNN and BiLSTM layers that receieves as input features as word at character level, word itself, PoS, position of the word in the sentence in order to predict the TAG.   
 
 
