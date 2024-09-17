@@ -1,4 +1,4 @@
-# NLP_Project
+# Negation and Uncertainty Detection
 
 ## Introduction
 
